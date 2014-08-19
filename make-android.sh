@@ -25,7 +25,7 @@ mkdir -p $OUT_DIR/armeabi
 mv src/$LIB_FILE_NAME $OUT_DIR/armeabi/$LIB_FILE_NAME
 
 # armeabi-v7a
-echo -n "\n\nBuilding armeabi-v7a.."
+echo -e "\n\nBuilding armeabi-v7a.."
 make clean
 NDK=$HOME/android-ndk-r10 \
 NDKABI=19 \
@@ -40,7 +40,7 @@ mkdir -p $OUT_DIR/armeabi-v7a
 mv src/$LIB_FILE_NAME $OUT_DIR/armeabi-v7a/$LIB_FILE_NAME
 
 # x86
-echo -n "\n\nBuilding x86.."
+echo -e "\n\nBuilding x86.."
 make clean
 NDK=$HOME/android-ndk-r10 \
 NDKABI=19 \
@@ -61,4 +61,4 @@ cp src/luaconf.h $OUT_INCLUDE_DIR
 cp src/lualib.h $OUT_INCLUDE_DIR
 cp src/luajit.h $OUT_INCLUDE_DIR
 
-echo -n "\nArtifacts are in $OUT_DIR directory.\n"
+echo -e "\nArtifacts are in $OUT_DIR directory.\n"
