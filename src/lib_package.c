@@ -570,10 +570,6 @@ static const lua_CFunction package_loaders[] =
 #if defined(__APPLE__)
 #import <CoreFoundation/CoreFoundation.h>
 
-#ifndef FRAMEWORK_BUNDLE_ID
-#define FRAMEWORK_BUNDLE_ID "pl.makenika.Satellite"
-#endif
-
 CFStringRef createStringPathForBundleResources(CFBundleRef bundle) {
   CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(bundle);
   CFStringRef urlPath = CFURLGetString(resourcesURL);
@@ -587,21 +583,17 @@ static void setpath_iOS_helper(lua_State *L, int noenv) {
   CFBundleRef mainBundle = CFBundleGetMainBundle();
   CFStringRef mainResourcePath = createStringPathForBundleResources(mainBundle);
 
-  CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR(FRAMEWORK_BUNDLE_ID));
-  CFStringRef resourcePath = createStringPathForBundleResources(bundle);
-
   // The Lua path will contain the "lua" directories,
   // which are contained in this framework's bundle,
   // and also in application's bundle.
   CFStringRef path = CFStringCreateWithFormat(NULL, NULL,
-    CFSTR("%@/lua/?.lua;%@/lua/?/init.lua;%@/lua/?.lua;%@/lua/?/init.lua;%s"),
+    CFSTR("%@/lua/?.lua;%@/lua/?/init.lua;%s"),
     mainResourcePath, mainResourcePath,
-    resourcePath, resourcePath, LUA_PATH_DEFAULT);
+    LUA_PATH_DEFAULT);
   setpath(L, "path", LUA_PATH, CFStringGetCStringPtr(path, kCFStringEncodingUTF8), noenv);
 
   CFRelease(path);
   CFRelease(mainResourcePath);
-  CFRelease(resourcePath);
 }
 
 #endif
