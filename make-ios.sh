@@ -6,7 +6,7 @@ echo "Compiling..."
 OUT_DIR=dist/iOS
 OUT_LIB_DIR=$OUT_DIR/lib
 OUT_INCLUDE_DIR=$OUT_DIR/include
-LIB_EXT=so
+LIB_EXT=a
 
 rm -rf $OUT_DIR
 mkdir -p $OUT_LIB_DIR
