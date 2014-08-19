@@ -567,6 +567,45 @@ static const lua_CFunction package_loaders[] =
   NULL
 };
 
+#if defined(__APPLE__)
+#import <CoreFoundation/CoreFoundation.h>
+
+#ifndef FRAMEWORK_BUNDLE_ID
+#define FRAMEWORK_BUNDLE_ID "pl.makenika.Satellite"
+#endif
+
+CFStringRef createStringPathForBundleResources(CFBundleRef bundle) {
+  CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(bundle);
+  CFStringRef urlPath = CFURLGetString(resourcesURL);
+  CFMutableStringRef resourcePath = CFStringCreateMutableCopy(NULL, 0, urlPath);
+  CFStringTrim(resourcePath, CFSTR("file://"));
+  CFRelease(resourcesURL);
+  return resourcePath;
+}
+
+static void setpath_iOS_helper(lua_State *L, int noenv) {
+  CFBundleRef mainBundle = CFBundleGetMainBundle();
+  CFStringRef mainResourcePath = createStringPathForBundleResources(mainBundle);
+
+  CFBundleRef bundle = CFBundleGetBundleWithIdentifier(CFSTR(FRAMEWORK_BUNDLE_ID));
+  CFStringRef resourcePath = createStringPathForBundleResources(bundle);
+
+  // The Lua path will contain the "lua" directories,
+  // which are contained in this framework's bundle,
+  // and also in application's bundle.
+  CFStringRef path = CFStringCreateWithFormat(NULL, NULL,
+    CFSTR("%@/lua/?.lua;%@/lua/?/init.lua;%@/lua/?.lua;%@/lua/?/init.lua;%s"),
+    mainResourcePath, mainResourcePath,
+    resourcePath, resourcePath, LUA_PATH_DEFAULT);
+  setpath(L, "path", LUA_PATH, CFStringGetCStringPtr(path, kCFStringEncodingUTF8), noenv);
+
+  CFRelease(path);
+  CFRelease(mainResourcePath);
+  CFRelease(resourcePath);
+}
+
+#endif
+
 LUALIB_API int luaopen_package(lua_State *L)
 {
   int i;
@@ -586,8 +625,18 @@ LUALIB_API int luaopen_package(lua_State *L)
   lua_getfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
   noenv = lua_toboolean(L, -1);
   lua_pop(L, 1);
+
+#if defined(__ANDROID__)
   setpath(L, "path", LUA_PATH, LUA_PATH_DEFAULT, noenv);
   setpath(L, "cpath", LUA_CPATH, LUA_CPATH_DEFAULT, noenv);
+#elif defined(__APPLE__)
+  setpath_iOS_helper(L, noenv);
+  setpath(L, "cpath", LUA_CPATH, LUA_CPATH_DEFAULT, noenv);
+#else
+  setpath(L, "path", LUA_PATH, LUA_PATH_DEFAULT, noenv);
+  setpath(L, "cpath", LUA_CPATH, LUA_CPATH_DEFAULT, noenv);
+#endif
+
   lua_pushliteral(L, LUA_PATH_CONFIG);
   lua_setfield(L, -2, "config");
   luaL_findtable(L, LUA_REGISTRYINDEX, "_LOADED", 16);
