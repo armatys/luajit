@@ -2,7 +2,7 @@
 
 set -e
 
-LIB_FILE_NAME=libluajit.so
+LIB_FILE_NAME=libluajit.a
 OUT_DIR=dist/Android
 OUT_DIR_LIB=$OUT_DIR/lib
 OUT_INCLUDE_DIR=$OUT_DIR/include
