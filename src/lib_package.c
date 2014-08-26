@@ -567,37 +567,6 @@ static const lua_CFunction package_loaders[] =
   NULL
 };
 
-#if defined(__APPLE__)
-#import <CoreFoundation/CoreFoundation.h>
-
-CFStringRef createStringPathForBundleResources(CFBundleRef bundle) {
-  CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(bundle);
-  CFStringRef urlPath = CFURLGetString(resourcesURL);
-  CFMutableStringRef resourcePath = CFStringCreateMutableCopy(NULL, 0, urlPath);
-  CFStringTrim(resourcePath, CFSTR("file://"));
-  CFRelease(resourcesURL);
-  return resourcePath;
-}
-
-static void setpath_iOS_helper(lua_State *L, int noenv) {
-  CFBundleRef mainBundle = CFBundleGetMainBundle();
-  CFStringRef mainResourcePath = createStringPathForBundleResources(mainBundle);
-
-  // The Lua path will contain the "lua" directories,
-  // which are contained in this framework's bundle,
-  // and also in application's bundle.
-  CFStringRef path = CFStringCreateWithFormat(NULL, NULL,
-    CFSTR("%@/lua/?.lua;%@/lua/?/init.lua;%s"),
-    mainResourcePath, mainResourcePath,
-    LUA_PATH_DEFAULT);
-  setpath(L, "path", LUA_PATH, CFStringGetCStringPtr(path, kCFStringEncodingUTF8), noenv);
-
-  CFRelease(path);
-  CFRelease(mainResourcePath);
-}
-
-#endif
-
 LUALIB_API int luaopen_package(lua_State *L)
 {
   int i;
@@ -618,16 +587,8 @@ LUALIB_API int luaopen_package(lua_State *L)
   noenv = lua_toboolean(L, -1);
   lua_pop(L, 1);
 
-#if defined(__ANDROID__)
   setpath(L, "path", LUA_PATH, LUA_PATH_DEFAULT, noenv);
   setpath(L, "cpath", LUA_CPATH, LUA_CPATH_DEFAULT, noenv);
-#elif defined(__APPLE__)
-  setpath_iOS_helper(L, noenv);
-  setpath(L, "cpath", LUA_CPATH, LUA_CPATH_DEFAULT, noenv);
-#else
-  setpath(L, "path", LUA_PATH, LUA_PATH_DEFAULT, noenv);
-  setpath(L, "cpath", LUA_CPATH, LUA_CPATH_DEFAULT, noenv);
-#endif
 
   lua_pushliteral(L, LUA_PATH_CONFIG);
   lua_setfield(L, -2, "config");
